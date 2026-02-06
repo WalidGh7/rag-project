@@ -13,6 +13,7 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+# Converting text into vectors
 def get_embeddings():
     return OpenAIEmbeddings(
         model=settings.EMBEDDING_MODEL,
