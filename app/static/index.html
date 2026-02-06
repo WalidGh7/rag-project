@@ -1,78 +1,37 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>Thesis RAG Chat</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    body { font-family: system-ui, Arial; margin: 0; }
-    .wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
-    .chat { border: 1px solid #ddd; border-radius: 10px; padding: 12px; height: 65vh; overflow-y: auto; background: #fafafa; }
-    .msg { margin: 10px 0; }
-    .role { font-weight: 700; }
-    .bubble { display: inline-block; padding: 10px 12px; border-radius: 10px; border: 1px solid #e5e5e5; background: white; }
-    .row { display: flex; gap: 10px; margin-top: 12px; }
-    input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
-    button { padding: 10px 14px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
-    small { color: #666; display: block; margin-top: 6px; }
-    pre { white-space: pre-wrap; margin: 0; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <link rel="stylesheet" href="/static/style.css?v=5" />
 </head>
 <body>
-  <div class="wrap">
-    <h2>Thesis RAG Chat</h2>
-    <div id="chat" class="chat"></div>
 
-    <div class="row">
-      <input id="q" placeholder="Ask a question about the thesis..." />
-      <button id="send">Send</button>
-    </div>
-    <small>Note: sending a message calls OpenAI and can cost a small amount.</small>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon">R</div>
+    <h1>Thesis RAG Chat</h1>
   </div>
 
-<script>
-const chat = document.getElementById("chat");
-const q = document.getElementById("q");
-const send = document.getElementById("send");
+  <!-- Chat messages -->
+  <div class="chat-container">
+    <div id="chat" class="chat-box"></div>
+  </div>
 
-function addMsg(role, text) {
-  const div = document.createElement("div");
-  div.className = "msg";
-  div.innerHTML = `<div class="role">${role}</div><div class="bubble"><pre>${text}</pre></div>`;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
+  <!-- Input bar -->
+  <div class="input-area">
+    <div class="input-wrap">
+      <input id="q" placeholder="Ask a question about the thesis..." autocomplete="off" />
+      <button id="send">
+        Send
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
 
-async function ask() {
-  const question = q.value.trim();
-  if (!question) return;
-  q.value = "";
-  addMsg("You", question);
-  addMsg("Assistant", "…thinking");
-
-  const res = await fetch("/query", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ question })
-  });
-
-  // remove the "thinking" message (last)
-  chat.removeChild(chat.lastChild);
-
-  if (!res.ok) {
-    const errText = await res.text();
-    addMsg("Assistant", "Error: " + errText);
-    return;
-  }
-
-  const data = await res.json();
-  const sources = (data.sources || []).map(s => `${s.source}:${s.page}`).join(", ");
-  addMsg("Assistant", data.answer + (sources ? `\n\nSources: ${sources}` : ""));
-}
-
-send.onclick = ask;
-q.addEventListener("keydown", (e) => { if (e.key === "Enter") ask(); });
-addMsg("Assistant", "Hi! Ask me anything about the thesis.");
-</script>
+  <script src="/static/script.js?v=5"></script>
 </body>
 </html>
