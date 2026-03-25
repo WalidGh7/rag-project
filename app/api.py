@@ -14,7 +14,7 @@ def health():
 
 @router.post("/query", response_model=QueryResponse)
 def query(req: QueryRequest, db: Session = Depends(get_db)):
-    answer, sources = build_rag(req.question)
+    answer, sources, _ = build_rag(req.question)
 
     log = QueryLog(
         question=req.question,

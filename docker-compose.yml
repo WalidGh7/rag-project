@@ -20,6 +20,8 @@ services:
     volumes:
       - ./chroma_data:/app/chroma_data
       - ./thesis:/app/thesis
+      # Mount AWS credentials so the container can reach S3
+      - ~/.aws:/root/.aws:ro
     depends_on:
       - postgres
     restart: unless-stopped
