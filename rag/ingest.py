@@ -1,4 +1,6 @@
 from pathlib import Path
+import tempfile
+import boto3
 import pymupdf4llm
 from langchain_text_splitters import (
     MarkdownHeaderTextSplitter,
@@ -17,7 +19,7 @@ def load_and_split_pdf(pdf_path: str) -> list[Document]:
       3. Sub-split long sections with RecursiveCharacterTextSplitter
       4. Enrich metadata with chapter, section, subsection, page
     """
-    # Step 1: PDF → Markdown with page tags
+    # Step 1: PDF to Markdown with page tags
     md_text = pymupdf4llm.to_markdown(pdf_path, page_chunks=False)
 
     # Step 2: Split by Markdown headers
@@ -32,7 +34,7 @@ def load_and_split_pdf(pdf_path: str) -> list[Document]:
     )
     header_chunks = header_splitter.split_text(md_text)
 
-    # Step 3: Sub-split long sections (1500 chars ≈ 375 tokens, good for text-embedding-3-small)
+    # Step 3: Sub-split long sections 
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1500,
         chunk_overlap=200,
@@ -79,3 +81,22 @@ def ingest_pdf(pdf_path: str) -> dict:
         "chunk_size": 1500,
         "chunk_overlap": 200,
     }
+
+
+def ingest_pdf_from_s3(bucket: str, key: str, profile: str = "rag-project") -> dict:
+    """
+    Download a PDF from S3 to a temp file, ingest it, then delete the temp file.
+    """
+    session = boto3.Session(profile_name=profile)
+    s3 = session.client("s3")
+
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+        tmp_path = tmp.name
+
+    try:
+        s3.download_file(bucket, key, tmp_path)
+        result = ingest_pdf(tmp_path)
+        result["s3_source"] = f"s3://{bucket}/{key}"
+        return result
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
